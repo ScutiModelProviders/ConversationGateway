@@ -93,7 +93,7 @@ def _blocks(role: str, content: Any, limits: Limits, images: list[int]) -> list[
     out = []
     for block in content:
         kind = block.get("type") if isinstance(block, dict) else None
-        allowed = BLOCKS[role].get(kind)
+        allowed = BLOCKS[role].get(kind) if isinstance(kind, str) else None
         if allowed is None:
             raise bad(f"a {role} message cannot hold a '{kind}' block.")
         if set(block) - allowed:
@@ -101,11 +101,11 @@ def _blocks(role: str, content: Any, limits: Limits, images: list[int]) -> list[
         if kind == "text":
             out.append({"type": "text", "text": _text(block.get("text"), "text", limits.max_text)})
         elif kind == "image":
-            if block.get("media_type") not in MEDIA:
+            if not isinstance(block.get("media_type"), str) or block["media_type"] not in MEDIA:
                 raise bad("an image media_type must be image/png, image/jpeg, image/webp or image/gif.")
             data = _text(block.get("data"), "image data", limits.max_image_bytes * 4 // 3 + 4)
             # shortcut: size is estimated from the base64 length and the base64 is not decoded here; upstream rejects bad data.
-            if len(data) * 3 // 4 > limits.max_image_bytes:
+            if len(data) * 3 // 4 - min(2, len(data) - len(data.rstrip("="))) > limits.max_image_bytes:
                 raise bad("an image is larger than the limit.")
             images[0] += 1
             out.append({"type": "image", "media_type": block["media_type"], "data": data})
@@ -156,7 +156,8 @@ def parse_request(data: Any, limits: Limits) -> ChatRequest:
         raise bad(f"messages must be a list of 1 to {limits.max_messages}.")
     images, messages = [0], []
     for item in raw:
-        if not isinstance(item, dict) or set(item) - {"role", "content", "reasoning_state"} or item.get("role") not in BLOCKS:
+        if (not isinstance(item, dict) or set(item) - {"role", "content", "reasoning_state"}
+                or not isinstance(item.get("role"), str) or item["role"] not in BLOCKS):
             raise bad("each message has a role (user, assistant or tool), content and for assistants an optional reasoning_state.")
         message = {"role": item["role"], "content": _blocks(item["role"], item.get("content"), limits, images)}
         if "reasoning_state" in item:
@@ -170,7 +171,8 @@ def parse_request(data: Any, limits: Limits) -> ChatRequest:
     choice = data.get("tool_choice")
     if choice is not None:
         names = {t["name"] for t in tools}
-        valid = choice in ("auto", "none", "required") or (isinstance(choice, dict) and set(choice) == {"name"} and choice["name"] in names)
+        valid = choice in ("auto", "none", "required") or (isinstance(choice, dict) and set(choice) == {"name"}
+                and isinstance(choice["name"], str) and choice["name"] in names)
         if not tools or not valid:
             raise bad("tool_choice needs tools and must be auto, none, required or {\"name\": <a tool>}.")
     elif tools:

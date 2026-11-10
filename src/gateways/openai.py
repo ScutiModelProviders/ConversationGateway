@@ -80,6 +80,8 @@ def _usage(u: dict[str, Any]) -> dict[str, int]:
 
 
 def chat_result(body: dict[str, Any]) -> ChatResult:
+    if not body.get("choices") or body["choices"][0].get("finish_reason") not in FINISH:
+        raise truncated()
     choice = (body.get("choices") or [{}])[0]
     message = choice.get("message") or {}
     content = [{"type": "text", "text": message["content"]}] if message.get("content") else []
@@ -88,6 +90,8 @@ def chat_result(body: dict[str, Any]) -> ChatResult:
         content.append({"type": "tool_call", "id": call.get("id") or f"call_{index}", "name": function.get("name") or "",
                         "arguments": _args(function.get("arguments"))})
     stop = FINISH.get(choice.get("finish_reason"), "end")
+    if message.get("refusal"):
+        stop = "refusal"
     return ChatResult(content, stop, _usage(body.get("usage") or {}), str(body.get("model") or ""),
                       message.get("reasoning_content") or message.get("reasoning") or None)
 
@@ -127,18 +131,23 @@ def responses_params(request: ChatRequest, model: str, entry: dict[str, Any]) ->
 
 
 def responses_result(body: dict[str, Any]) -> ChatResult:
+    if body.get("status") not in ("completed", "incomplete", "failed") or not isinstance(body.get("output"), list):
+        raise truncated()
     content, thoughts = [], []
+    refused = False
     for item in body.get("output") or []:
         kind = item.get("type")
         if kind == "message":
             content += [{"type": "text", "text": part["text"]} for part in item.get("content") or [] if part.get("type") == "output_text"]
+            refused = refused or any(part.get("type") == "refusal" for part in item.get("content") or [])
         elif kind == "function_call":
             content.append({"type": "tool_call", "id": item.get("call_id") or item.get("id"), "name": item.get("name") or "",
                             "arguments": _args(item.get("arguments"))})
         elif kind == "reasoning":
             thoughts += [s.get("text") or "" for s in item.get("summary") or []]
     reason = (body.get("incomplete_details") or {}).get("reason")
-    stop = ("tool_call" if any(b["type"] == "tool_call" for b in content) else
+    stop = ("error" if body.get("status") == "failed" else "refusal" if refused else
+            "tool_call" if any(b["type"] == "tool_call" for b in content) else
             "max_tokens" if body.get("status") == "incomplete" and reason == "max_output_tokens" else
             "refusal" if body.get("status") == "incomplete" and reason == "content_filter" else "end")
     return ChatResult(content, stop, _usage(body.get("usage") or {}), str(body.get("model") or ""), "\n".join(t for t in thoughts if t) or None)
@@ -174,36 +183,41 @@ class OpenAIGateway(BaseGateway):
             params["stream_options"] = {"include_usage": True}
         text: list[str] = []
         thoughts: list[str] = []
+        refusals: list[str] = []
         calls: dict[int, dict[str, str]] = {}
         usage: dict[str, Any] = {}
         finish = None
         model = ""
         async with self.guard():
             stream = await self.client.chat.completions.create(**params, stream=True)
-            async for chunk in stream:
-                data = chunk.model_dump()
-                model = data.get("model") or model
-                usage = data.get("usage") or usage
-                for choice in data.get("choices") or []:
-                    delta = choice.get("delta") or {}
-                    if delta.get("content"):
-                        text.append(delta["content"])
-                        yield "text", delta["content"]
-                    thought = delta.get("reasoning_content") or delta.get("reasoning")
-                    if thought:
-                        thoughts.append(thought)
-                        yield "reasoning", thought
-                    for piece in delta.get("tool_calls") or []:
-                        slot = calls.setdefault(piece.get("index") or 0, {"id": "", "name": "", "arguments": ""})
-                        function = piece.get("function") or {}
-                        slot["id"] = piece.get("id") or slot["id"]
-                        slot["name"] = function.get("name") or slot["name"]
-                        slot["arguments"] += function.get("arguments") or ""
-                        yield "tool_call", slot["id"], slot["name"], function.get("arguments") or ""
-                    finish = choice.get("finish_reason") or finish
+            async with stream:
+                async for chunk in stream:
+                    data = chunk.model_dump()
+                    model = data.get("model") or model
+                    usage = data.get("usage") or usage
+                    for choice in data.get("choices") or []:
+                        delta = choice.get("delta") or {}
+                        if delta.get("content"):
+                            text.append(delta["content"])
+                            yield "text", delta["content"]
+                        thought = delta.get("reasoning_content") or delta.get("reasoning")
+                        if thought:
+                            thoughts.append(thought)
+                            yield "reasoning", thought
+                        if delta.get("refusal"):
+                            refusals.append(delta["refusal"])
+                        for piece in delta.get("tool_calls") or []:
+                            slot = calls.setdefault(piece.get("index") or 0, {"id": "", "name": "", "arguments": ""})
+                            function = piece.get("function") or {}
+                            slot["id"] = piece.get("id") or slot["id"]
+                            slot["name"] = function.get("name") or slot["name"]
+                            slot["arguments"] += function.get("arguments") or ""
+                            yield "tool_call", slot["id"], slot["name"], function.get("arguments") or ""
+                        finish = choice.get("finish_reason") or finish
             if finish is None:
                 raise truncated()
         message: dict[str, Any] = {"content": "".join(text) or None, "reasoning_content": "".join(thoughts) or None,
+                                   "refusal": "".join(refusals) or None,
                                    "tool_calls": [{"id": c["id"], "function": {"name": c["name"], "arguments": c["arguments"]}}
                                                   for _, c in sorted(calls.items())]}
         yield "done", chat_result({"choices": [{"message": message, "finish_reason": finish}], "usage": usage, "model": model})
@@ -214,22 +228,23 @@ class OpenAIGateway(BaseGateway):
         final = None
         async with self.guard():
             stream = await self.client.responses.create(**params, stream=True)
-            async for event in stream:
-                kind = event.type
-                if kind == "response.output_text.delta":
-                    yield "text", event.delta
-                elif kind == "response.reasoning_summary_text.delta":
-                    yield "reasoning", event.delta
-                elif kind == "response.output_item.added" and event.item.type == "function_call":
-                    calls[event.item.id] = (event.item.call_id, event.item.name)
-                    yield "tool_call", event.item.call_id, event.item.name, ""
-                elif kind == "response.function_call_arguments.delta":
-                    call_id, name = calls.get(event.item_id, ("", ""))
-                    yield "tool_call", call_id, name, event.delta
-                elif kind in ("response.completed", "response.incomplete"):
-                    final = event.response.model_dump()
-                elif kind in ("response.failed", "error"):
-                    raise GatewayError(502, "gateway_unavailable", "The model service stopped answering.", kind="unavailable")
+            async with stream:
+                async for event in stream:
+                    kind = event.type
+                    if kind == "response.output_text.delta":
+                        yield "text", event.delta
+                    elif kind == "response.reasoning_summary_text.delta":
+                        yield "reasoning", event.delta
+                    elif kind == "response.output_item.added" and event.item.type == "function_call":
+                        calls[event.item.id] = (event.item.call_id, event.item.name)
+                        yield "tool_call", event.item.call_id, event.item.name, ""
+                    elif kind == "response.function_call_arguments.delta":
+                        call_id, name = calls.get(event.item_id, ("", ""))
+                        yield "tool_call", call_id, name, event.delta
+                    elif kind in ("response.completed", "response.incomplete"):
+                        final = event.response.model_dump()
+                    elif kind in ("response.failed", "error"):
+                        raise GatewayError(502, "gateway_unavailable", "The model service stopped answering.", kind="unavailable")
             if final is None:
                 raise truncated()
         yield "done", responses_result(final)

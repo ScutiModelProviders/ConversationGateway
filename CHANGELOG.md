@@ -2,22 +2,17 @@
 
 ## Unreleased
 
-- Shared admin infrastructure; configurable chat request limits.
+- Enforce output ceilings on omitted limits, validate reasoning budgets and malformed field types, bound chunked bodies and preserve stream failure kinds.
+- Accumulate thinking signatures; normalize refusals; close upstream streams and retired clients, retaining active requests through edits.
+- Reject unsupported Scuti tool-choice modes instead of dropping them.
 
-<!-- Task 2: Normalized messages, images, tools, schema and reasoning with request limits and unknown-field rejection. -->
+- One normalized chat contract for Anthropic, OpenAI Chat Completions/Responses, Azure and Scuti CNV services, including Gemini-compatible presets.
+- Pass-through tools, signed reasoning state, images, structured output and native/emulated streaming.
+- Saved gateways with write-only secrets, provider variants, capabilities, token ceilings and connectivity checks.
+- Shared admin page, caller tokens, request limits and in-flight concurrency cap on port 29407.
+- Async httpx2-to-httpx SDK transport bridge; Anthropic temperature sent through extra_body and x-api-key set explicitly for installed SDK compatibility.
+- Docker/Windows launchers and operator guides. Live providers, Gemini tools/reasoning, CNV image field and Docker build remain unverified.
 
-<!-- Task 3: Upstream failures carry safe error kinds and bounded Retry-After; no retries. -->
+## 1.0.0 - 2026-11-10
 
-<!-- Task 4: Anthropic Messages: tools, signed thinking state, schema via forced tool, cache breakpoints and native SSE. -->
-
-<!-- Task 5: OpenAI Chat Completions, Responses and Azure; compatible servers including Gemini; native SSE and tool mapping. -->
-
-<!-- Task 6: CNV chat and NDJSON, tools and thinking; images forwarded using unverified images field. Scuti refuses model overrides. -->
-
-<!-- Task 7: Saved gateways validate provider variants, preserve omitted secrets, expose presence flags, and offer provider presets. -->
-
-<!-- Task 8: Chat service checks capabilities and token ceilings, caps concurrency, shapes replies and emulates streaming. -->
-
-<!-- Task 9: Authenticated chat, gateway listing and validation routes; own preset/variant gateway admin page; 64 MiB request bodies. -->
-
-Docker and Windows launchers use port 29407. Docker build remains unverified.
+- Initial ConversationGateway service.

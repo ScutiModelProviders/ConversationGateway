@@ -24,8 +24,14 @@ class BaseGateway:
         self.timeout = float(entry.get("timeout_s", 300))
         self.capabilities = {**self.defaults, **{k: bool(v) for k, v in (entry.get("capabilities") or {}).items() if k in self.defaults}}
         self.secrets = [str(entry[k]) for k in SECRET_KEYS if entry.get(k)]
-        # shortcut: the client lives as long as the process and is not closed on shutdown.
         self.http = httpx.AsyncClient(transport=transport, follow_redirects=False, timeout=self.timeout)
+
+    async def aclose(self) -> None:
+        """Release both SDK and service connection pools."""
+        client = getattr(self, "client", None)
+        if client is not None:
+            await client.close()
+        await self.http.aclose()
 
     def can(self, capability: str) -> bool:
         return self.capabilities[capability]

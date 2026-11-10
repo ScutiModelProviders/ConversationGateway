@@ -20,7 +20,7 @@ def scrub(text: str, secrets: Iterable[str], limit: int = 500) -> str:
 def _wait(value: str | None) -> int:
     try:
         return max(1, min(60, math.ceil(float(value))))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return 1
 
 

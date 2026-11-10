@@ -64,6 +64,8 @@ def chat_body(entry: dict[str, Any], request: ChatRequest, can_think: bool, stre
 
 
 def _result(body: dict[str, Any]) -> ChatResult:
+    if not isinstance(body, dict) or body.get("finish_reason") not in FINISH:
+        raise truncated()
     content = [{"type": "text", "text": body["content"]}] if body.get("content") else []
     for index, call in enumerate(body.get("tool_calls") or []):
         content.append({"type": "tool_call", "id": call.get("id") or f"call_{index}", "name": call.get("name") or "",
@@ -83,6 +85,8 @@ class ScutiGateway(BaseGateway):
     def validate(self, request: ChatRequest) -> None:
         if request.model:
             raise GatewayError(422, "model_unsupported", "A model service runs one model; leave model out.")
+        if request.tool_choice not in (None, "auto"):
+            raise GatewayError(422, "tool_choice_unsupported", "This model service supports only automatic tool choice.")
 
     def _headers(self) -> dict[str, str]:
         return {"X-Internal-Token": self.entry["token"]} if self.entry.get("token") else {}
@@ -135,7 +139,10 @@ class ScutiGateway(BaseGateway):
                         yield "done", result
                         return
                     elif kind == "error":
-                        raise GatewayError(502, "gateway_error", scrub(str(item.get("message") or f"{NAME} stopped answering."), self.secrets), kind="unavailable")
+                        status = item.get("status", 502)
+                        status = status if isinstance(status, int) and 400 <= status <= 599 else 502
+                        raise upstream_error(status, str(item.get("message") or item.get("detail") or f"{NAME} stopped answering."),
+                                             secrets=self.secrets)
                 raise truncated(NAME)
 
     async def probe(self) -> str:

@@ -1,21 +1,13 @@
 # Deploying ConversationGateway
 
-Port 29407. Deployment files arrive in Task 10; operational guides in Task 12.
+ConversationGateway is one HTTP service on port 29407, with no local model: callers reach it directly or at `http://conversationgateway:29407` on `citadel_core`.
 
-<!-- Task 2: Normalized messages, images, tools, schema and reasoning with request limits and unknown-field rejection. -->
+## Ways to run it
 
-<!-- Task 3: Upstream failures carry safe error kinds and bounded Retry-After; no retries. -->
+| Path | Guide |
+|---|---|
+| Docker Desktop on this PC | [Docker on this PC](docs/guide-docker-same-device.md) |
+| Docker on another machine | [Deployment machine](docs/guide-docker-deployment-device.md) |
+| Directly on Windows | [Without Docker](docs/guide-no-docker-same-device.md) |
 
-<!-- Task 4: Anthropic Messages: tools, signed thinking state, schema via forced tool, cache breakpoints and native SSE. -->
-
-<!-- Task 5: OpenAI Chat Completions, Responses and Azure; compatible servers including Gemini; native SSE and tool mapping. -->
-
-<!-- Task 6: CNV chat and NDJSON, tools and thinking; images forwarded using unverified images field. Scuti refuses model overrides. -->
-
-<!-- Task 7: Saved gateways validate provider variants, preserve omitted secrets, expose presence flags, and offer provider presets. -->
-
-<!-- Task 8: Chat service checks capabilities and token ceilings, caps concurrency, shapes replies and emulates streaming. -->
-
-<!-- Task 9: Authenticated chat, gateway listing and validation routes; own preset/variant gateway admin page; 64 MiB request bodies. -->
-
-Docker and Windows launchers use port 29407. Docker build remains unverified.
+Once it runs, follow [the admin web UI guide](docs/guide-web-ui.md).

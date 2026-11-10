@@ -25,3 +25,7 @@ Edit `AGENTS.md`; `CLAUDE.md` only imports it through `@AGENTS.md`.
 
 - Adapters live in src/gateways/ (one file per provider); request mapping stays in pure functions (message_params, chat_params, responses_params, chat_body) so tests need no network.
 - Task 11 belongs to user: do not edit sibling service folders or ../_docs.
+
+- Apply output ceilings to defaults as well as explicit max_tokens; reject unsupported Scuti tool_choice instead of dropping it.
+- Lease adapters during chats and probes; close retired clients after last user and close SDK streams on disconnect.
+- Stream body validation must stop before reading beyond 64 MiB; malformed JSON field types produce 422.

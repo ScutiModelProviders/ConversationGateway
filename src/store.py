@@ -69,7 +69,7 @@ class GatewayStore:
         if not isinstance(data, dict):
             raise ValueError("Send an object.")
         provider = data.get("provider")
-        if provider not in PROVIDERS:
+        if not isinstance(provider, str) or provider not in PROVIDERS:
             raise ValueError("The provider must be anthropic, openai or scuti.")
         with self._lock:
             gateways = self._read()
@@ -86,6 +86,8 @@ class GatewayStore:
 
         def text(key: str, label: str, required: bool, limit: int = 300) -> str | None:
             value = pick(key)
+            if isinstance(value, str):
+                value = value.strip()
             if value is None or value == "":
                 if required:
                     raise ValueError(f"{label} is required.")
@@ -98,7 +100,7 @@ class GatewayStore:
         variants = PROVIDERS[provider]
         if provider != "scuti":
             auth = pick("auth") or "key"
-            if auth not in variants:
+            if not isinstance(auth, str) or auth not in variants:
                 raise ValueError("The auth must be " + " or ".join(variants) + ".")
             entry["auth"] = auth
         else:

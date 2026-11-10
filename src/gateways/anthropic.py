@@ -70,6 +70,8 @@ def message_params(request: ChatRequest, model: str, default_max: int) -> dict[s
         messages[-1]["content"][-1]["cache_control"] = EPHEMERAL
     if request.reasoning:
         budget = request.reasoning["budget_tokens"] or BUDGETS[request.reasoning["effort"]]
+        if request.max_tokens is None:
+            params["max_tokens"] = max(default_max, budget + 1)
         params["thinking"] = {"type": "enabled", "budget_tokens": budget}  # Anthropic allows no temperature here
     elif request.temperature is not None:
         params["temperature"] = request.temperature
@@ -77,6 +79,8 @@ def message_params(request: ChatRequest, model: str, default_max: int) -> dict[s
 
 
 def build_result(body: dict[str, Any], schema_name: str | None = None) -> ChatResult:
+    if body.get("stop_reason") not in STOP or not isinstance(body.get("content"), list):
+        raise truncated()
     content, thoughts, state = [], [], []
     for b in body.get("content") or []:
         kind = b.get("type")
@@ -122,6 +126,10 @@ class AnthropicGateway(BaseGateway):
     def validate(self, request: ChatRequest) -> None:
         if request.schema and request.reasoning:
             raise GatewayError(422, "schema_with_reasoning", "Anthropic cannot force a structured reply while it reasons. Send one of them.")
+        if request.reasoning:
+            budget = request.reasoning["budget_tokens"] or BUDGETS[request.reasoning["effort"]]
+            if budget < 1024 or (request.max_tokens is not None and request.max_tokens <= budget):
+                raise GatewayError(422, "invalid_reasoning_budget", "Anthropic requires a thinking budget of at least 1024 below max_tokens.")
 
     def _params(self, request: ChatRequest) -> dict[str, Any]:
         params = message_params(request, self.model, self.default_max)
@@ -143,45 +151,47 @@ class AnthropicGateway(BaseGateway):
         finished = False
         async with self.guard():
             stream = await self.client.messages.create(**self._params(request), stream=True)
-            async for event in stream:
-                kind = event.type
-                if kind == "message_start":
-                    usage.update(event.message.usage.model_dump())
-                    meta["model"] = event.message.model
-                elif kind == "content_block_start":
-                    block = event.content_block.model_dump()
-                    block["_json"] = ""
-                    blocks[event.index] = block
-                    if block["type"] == "tool_use" and block["name"] != schema_name:
-                        yield "tool_call", block["id"], block["name"], ""
-                elif kind == "content_block_delta":
-                    block, delta = blocks[event.index], event.delta
-                    if delta.type == "text_delta":
-                        block["text"] = (block.get("text") or "") + delta.text
-                        yield "text", delta.text
-                    elif delta.type == "thinking_delta":
-                        block["thinking"] = (block.get("thinking") or "") + delta.thinking
-                        yield "reasoning", delta.thinking
-                    elif delta.type == "signature_delta":
-                        block["signature"] = delta.signature
-                    elif delta.type == "input_json_delta":
-                        block["_json"] += delta.partial_json
-                        yield (("text", delta.partial_json) if block["name"] == schema_name
-                               else ("tool_call", block["id"], block["name"], delta.partial_json))
-                elif kind == "message_delta":
-                    meta["stop_reason"] = event.delta.stop_reason
-                    usage.update({k: v for k, v in event.usage.model_dump().items() if v is not None})
-                elif kind == "message_stop":
-                    finished = True
+            async with stream:
+                async for event in stream:
+                    kind = event.type
+                    if kind == "message_start":
+                        usage.update(event.message.usage.model_dump())
+                        meta["model"] = event.message.model
+                    elif kind == "content_block_start":
+                        block = event.content_block.model_dump()
+                        block["_json"] = ""
+                        blocks[event.index] = block
+                        if block["type"] == "tool_use" and block["name"] != schema_name:
+                            yield "tool_call", block["id"], block["name"], ""
+                    elif kind == "content_block_delta":
+                        block, delta = blocks[event.index], event.delta
+                        if delta.type == "text_delta":
+                            block["text"] = (block.get("text") or "") + delta.text
+                            yield "text", delta.text
+                        elif delta.type == "thinking_delta":
+                            block["thinking"] = (block.get("thinking") or "") + delta.thinking
+                            yield "reasoning", delta.thinking
+                        elif delta.type == "signature_delta":
+                            block["signature"] = (block.get("signature") or "") + delta.signature
+                        elif delta.type == "input_json_delta":
+                            block["_json"] += delta.partial_json
+                            yield (("text", delta.partial_json) if block["name"] == schema_name
+                                   else ("tool_call", block["id"], block["name"], delta.partial_json))
+                    elif kind == "message_delta":
+                        meta["stop_reason"] = event.delta.stop_reason
+                        usage.update({k: v for k, v in event.usage.model_dump().items() if v is not None})
+                    elif kind == "message_stop":
+                        finished = True
             if not finished:
                 raise truncated()
-        content = []
-        for index in sorted(blocks):
-            block = dict(blocks[index])
-            if block["type"] == "tool_use":
-                block["input"] = json.loads(block.pop("_json") or "{}")
-            content.append(block)
-        yield "done", build_result({"content": content, "stop_reason": meta["stop_reason"], "usage": usage, "model": meta["model"]}, schema_name)
+        async with self.guard():
+            content = []
+            for index in sorted(blocks):
+                block = dict(blocks[index])
+                if block["type"] == "tool_use":
+                    block["input"] = json.loads(block.pop("_json") or "{}")
+                content.append(block)
+            yield "done", build_result({"content": content, "stop_reason": meta["stop_reason"], "usage": usage, "model": meta["model"]}, schema_name)
 
     async def probe(self) -> str:
         async with self.guard():

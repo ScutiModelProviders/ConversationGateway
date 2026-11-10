@@ -1,10 +1,11 @@
-"""The ConversationGateway server: decide, gateways, validate and health, plus the admin routes."""
+"""The ConversationGateway server: chat, gateways, validate and health, plus admin routes."""
 from __future__ import annotations
 
 import asyncio
 import hmac
 import json
 import os
+from contextlib import asynccontextmanager, aclosing
 from pathlib import Path
 from typing import Any, AsyncIterator
 
@@ -63,9 +64,11 @@ def build_app(settings: Settings, config: Config | None = None, transport: httpx
         length = request.headers.get("content-length", "")
         if length.isdigit() and int(length) > MAX_BODY:
             raise GatewayError(413, "too_large", "The request is larger than 64 MiB.")
-        raw = await request.body()
-        if len(raw) > MAX_BODY:
-            raise GatewayError(413, "too_large", "The request is larger than 64 MiB.")
+        raw = bytearray()
+        async for chunk in request.stream():
+            if len(raw) + len(chunk) > MAX_BODY:
+                raise GatewayError(413, "too_large", "The request is larger than 64 MiB.")
+            raw.extend(chunk)
         try:
             return json.loads(raw)
         except ValueError:
@@ -73,12 +76,13 @@ def build_app(settings: Settings, config: Config | None = None, transport: httpx
 
     def lines(items: AsyncIterator[dict[str, Any]], first: dict[str, Any]) -> AsyncIterator[bytes]:
         async def generate() -> AsyncIterator[bytes]:
-            yield (json.dumps(first) + "\n").encode()
-            try:
-                async for item in items:
-                    yield (json.dumps(item) + "\n").encode()
-            except GatewayError as error:
-                yield (json.dumps({"type": "error", "status": error.status, **error.body()}) + "\n").encode()
+            async with aclosing(items):
+                yield (json.dumps(first) + "\n").encode()
+                try:
+                    async for item in items:
+                        yield (json.dumps(item) + "\n").encode()
+                except GatewayError as error:
+                    yield (json.dumps({"type": "error", "status": error.status, **error.body()}) + "\n").encode()
         return generate()
 
     @mcp.custom_route("/health", methods=["GET"])
@@ -144,6 +148,17 @@ def build_app(settings: Settings, config: Config | None = None, transport: httpx
             return JSONResponse({"service": "ConversationGateway", "settings": await asyncio.to_thread(config.describe)})
 
     app = mcp.streamable_http_app()
+    original_lifespan = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def lifespan(application):
+        try:
+            async with original_lifespan(application) as state:
+                yield state
+        finally:
+            await service.aclose()
+
+    app.router.lifespan_context = lifespan
     if config is not None and WEB_DIR.is_dir():
         app.router.routes.append(Mount("/admin", StaticFiles(directory=WEB_DIR, html=True)))
     app.add_middleware(TokenMiddleware, tokens=tokens if base.admin_password else None)
