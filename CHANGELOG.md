@@ -17,3 +17,5 @@
 <!-- Task 7: Saved gateways validate provider variants, preserve omitted secrets, expose presence flags, and offer provider presets. -->
 
 <!-- Task 8: Chat service checks capabilities and token ceilings, caps concurrency, shapes replies and emulates streaming. -->
+
+<!-- Task 9: Authenticated chat, gateway listing and validation routes; own preset/variant gateway admin page; 64 MiB request bodies. -->

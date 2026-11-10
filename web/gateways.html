@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gateways · ConversationGateway</title>
+<style>
+  :root { --bg:#fafbfc; --fg:#1b1f24; --muted:#59636e; --line:#d0d7de; --accent:#0b5fff; --bad:#b42318; --ok:#067647; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14181d; --fg:#e6edf3; --muted:#9aa4af; --line:#30363d; --accent:#6ea0ff; --bad:#ff8b81; --ok:#56d364; } }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; max-width:960px; margin-inline:auto; }
+  h1 { font-size:1.3rem; } h2 { font-size:1.05rem; margin-top:1.6rem; }
+  label { display:block; margin:.6rem 0 .2rem; font-weight:600; }
+  input, select, button { font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:.4rem .6rem; }
+  input, select { width:100%; max-width:30rem; box-sizing:border-box; }
+  button { cursor:pointer; } button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  table { border-collapse:collapse; width:100%; } th, td { text-align:left; padding:.4rem .5rem; border-bottom:1px solid var(--line); vertical-align:top; }
+  .wrap { overflow-x:auto; } .muted { color:var(--muted); } #status { min-height:1.5rem; margin-top:.8rem; } .bad { color:var(--bad); } .ok { color:var(--ok); }
+  .row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }
+</style>
+<style>
+  body, .row > div { min-width:0; } .wrap { max-width:100%; }
+  button:hover { border-color:var(--accent); } button:active { opacity:.8; }
+  button:disabled { opacity:.5; cursor:wait; } input:hover, select:hover { border-color:var(--muted); }
+  td { font-variant-numeric:tabular-nums; } p { max-width:72ch; }
+</style>
+</head>
+<body>
+<h1>Gateways</h1>
+<p class="muted">Each gateway is one chat model the service can use: an Anthropic, OpenAI-compatible (including Gemini) or Scuti model service. Callers name a gateway by its id.</p>
+<div class="row">
+  <div><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="off"></div>
+  <button id="load" class="primary" type="button">Load gateways</button>
+</div>
+<h2>Saved gateways</h2>
+<div class="wrap"><table>
+  <thead><tr><th>Id</th><th>Provider</th><th>Model or address</th><th>Streams</th><th>Images</th><th>Tools</th><th>Reasoning</th><th>Schema</th><th>Reachable</th><th>Actions</th></tr></thead>
+  <tbody id="rows"><tr><td colspan="10" class="muted">Enter the admin password and load.</td></tr></tbody>
+</table></div>
+<h2>Add or change a gateway</h2>
+<form id="form">
+  <label for="preset">Start from</label><select id="preset"><option value="">Choose a preset</option></select>
+  <label for="gid">Id</label><input id="gid" required pattern="[a-z0-9][a-z0-9_\-]{0,47}" autocomplete="off">
+  <label for="provider">Provider</label><select id="provider"><option>anthropic</option><option>openai</option><option>scuti</option></select>
+  <div id="variant-wrap"><label for="variant">Variant</label><select id="variant"></select></div>
+  <div id="fields"></div>
+  <div id="openai-fields">
+    <label for="api">API</label><select id="api"><option>chat</option><option>responses</option></select>
+    <label for="max_tokens_param">Token limit parameter</label><select id="max_tokens_param"><option value="">Default</option><option>max_tokens</option><option>max_completion_tokens</option></select>
+  </div>
+  <label for="model">Model</label><input id="model" autocomplete="off">
+  <label for="label">Label</label><input id="label" autocomplete="off" maxlength="80">
+  <label for="timeout_s">Timeout (seconds)</label><input id="timeout_s" type="number" min="1" max="1800" value="300">
+  <label for="default_max_tokens">Default max tokens</label><input id="default_max_tokens" type="number" min="1" max="1000000">
+  <label for="max_tokens_limit">Max tokens limit</label><input id="max_tokens_limit" type="number" min="1" max="1000000">
+  <div id="capabilities"></div>
+  <p><button class="primary" type="submit">Save gateway</button></p>
+</form>
+<div id="status" role="status" aria-live="polite"></div>
+<script>
+let providers = {}, presets = {};
+const caps = ["streams", "images", "tools", "reasoning", "schema"];
+const $ = (id) => document.getElementById(id);
+const say = (text, cls = "") => { $("status").className = cls; $("status").textContent = text; };
+const call = async (method, path, body) => {
+  const reply = await fetch(path, { method, headers: { "X-Admin-Password": $("pw").value, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const data = await reply.json().catch(() => ({}));
+  if (!reply.ok) throw new Error(data.detail || `Request failed (${reply.status})`);
+  return data;
+};
+for (const name of caps) {
+  const label = document.createElement("label"); label.htmlFor = `cap-${name}`; label.textContent = name[0].toUpperCase() + name.slice(1);
+  const select = document.createElement("select"); select.id = `cap-${name}`;
+  for (const value of ["default", "yes", "no"]) select.add(new Option(value, value));
+  $("capabilities").append(label, select);
+}
+function drawFields(saved = {}) {
+  const provider = $("provider").value;
+  $("variant-wrap").hidden = provider === "scuti";
+  $("openai-fields").hidden = provider !== "openai";
+  $("fields").replaceChildren();
+  for (const [name, label, secret, required] of providers[provider]?.[provider === "scuti" ? "" : $("variant").value] || []) {
+    const l = document.createElement("label"); l.htmlFor = name; l.textContent = label + (required ? " *" : "");
+    const i = document.createElement("input"); i.id = name; i.autocomplete = "off"; i.type = secret ? "password" : "text";
+    if (secret && saved["has_" + name]) i.placeholder = "saved (leave empty to keep)"; else if (saved[name] != null) i.value = saved[name];
+    $("fields").append(l, i);
+  }
+}
+function variants(saved = {}) {
+  $("variant").replaceChildren();
+  for (const variant of Object.keys(providers[$("provider").value] || {})) $("variant").add(new Option(variant, variant));
+  if (saved.auth) $("variant").value = saved.auth;
+  drawFields(saved);
+}
+async function load() {
+  $("load").disabled = true; say("Loading gateways…");
+  try {
+    const data = await call("GET", "/admin/gateways"); providers = data.form.providers; presets = data.presets;
+    $("preset").replaceChildren(new Option("Choose a preset", ""));
+    for (const [id, entry] of Object.entries(presets)) $("preset").add(new Option(entry.label || id, id));
+    variants();
+    const rows = $("rows"); rows.replaceChildren();
+    for (const g of data.gateways) {
+      const tr = rows.insertRow();
+      for (const v of [g.id, g.provider, g.model || g.url || g.base_url || g.azure_endpoint || "-", ...caps.map(c => g[c] ? "yes" : "no"), g.reachable == null ? "-" : g.reachable ? "yes" : "no"]) tr.insertCell().textContent = v;
+      const cell = tr.insertCell();
+      for (const [name, fn] of [["Test", () => test(g.id)], ["Edit", () => edit(g)], ["Delete", () => remove(g.id)]]) {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = name; b.setAttribute("aria-label", `${name} ${g.id}`); b.onclick = fn; cell.append(b, " ");
+      }
+    }
+    if (!data.gateways.length) { const cell = rows.insertRow().insertCell(); cell.colSpan = 10; cell.textContent = "No gateways saved yet."; }
+    say("Loaded.", "ok");
+  } catch (e) { say(e.message, "bad"); }
+  finally { $("load").disabled = false; }
+}
+function edit(g) {
+  $("gid").value = g.id; $("provider").value = g.provider; variants(g);
+  for (const name of ["model", "label", "default_max_tokens", "max_tokens_limit", "max_tokens_param"]) $(name).value = g[name] ?? "";
+  $("api").value = g.api || "chat"; $("timeout_s").value = g.timeout_s || 300;
+  for (const cap of caps) $("cap-" + cap).value = g.capabilities?.[cap] == null ? "default" : g.capabilities[cap] ? "yes" : "no";
+  $("gid").focus();
+}
+async function test(id) { try { const r = await call("POST", `/admin/gateways/${id}/test`); say(r.ok ? `${id}: ${r.message}` : `${id}: ${r.detail}`, r.ok ? "ok" : "bad"); } catch (e) { say(e.message, "bad"); } }
+async function remove(id) { if (!confirm(`Delete the gateway "${id}"?`)) return; try { await call("DELETE", `/admin/gateways/${id}`); await load(); } catch (e) { say(e.message, "bad"); } }
+$("load").onclick = load;
+$("provider").onchange = () => variants();
+$("variant").onchange = () => drawFields();
+$("preset").onchange = () => { const id = $("preset").value; if (id) edit({id, ...presets[id]}); };
+$("form").onsubmit = async (event) => {
+  event.preventDefault();
+  const provider = $("provider").value, auth = provider === "scuti" ? "" : $("variant").value;
+  const body = {provider}; if (auth) body.auth = auth;
+  const names = ["model", "label", "timeout_s", "default_max_tokens", "max_tokens_limit", ...(providers[provider]?.[auth] || []).map(f => f[0])];
+  if (provider === "openai") names.push("api", "max_tokens_param");
+  for (const name of names) { const v = $(name).value.trim(); if (v) body[name] = $(name).type === "number" ? Number(v) : v; }
+  body.capabilities = {};
+  for (const cap of caps) { const value = $("cap-" + cap).value; if (value !== "default") body.capabilities[cap] = value === "yes"; }
+  try { await call("PUT", `/admin/gateways/${$("gid").value}`, body); await load(); say("Saved.", "ok"); } catch (e) { say(e.message, "bad"); }
+};
+</script>
+</body>
+</html>
