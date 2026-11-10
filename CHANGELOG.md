@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Playground works behind a path-prefix proxy
+
+The Try it panel built its request URLs from the page origin, so behind ServiceHub (`/s/<id>/`) it called the hub's root and got 404 Not Found. It now resolves routes against the service root (`../` from the admin page). Same-origin checking is unchanged.
+
+
 - Enforce output ceilings on omitted limits, validate reasoning budgets and malformed field types, bound chunked bodies and preserve stream failure kinds.
 - Accumulate thinking signatures; normalize refusals; close upstream streams and retired clients, retaining active requests through edits.
 - Reject unsupported Scuti tool-choice modes instead of dropping them.
