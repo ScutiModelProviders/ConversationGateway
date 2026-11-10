@@ -8,8 +8,9 @@ import httpx
 from src.gateways.base import BaseGateway
 
 from src.gateways.anthropic import AnthropicGateway
+from src.gateways.openai import OpenAIGateway
 
-PROVIDERS: dict[str, type[BaseGateway]] = {"anthropic": AnthropicGateway}
+PROVIDERS: dict[str, type[BaseGateway]] = {"anthropic": AnthropicGateway, "openai": OpenAIGateway}
 
 
 def build_gateway(gateway_id: str, entry: dict[str, Any], transport: httpx.AsyncBaseTransport | None = None) -> BaseGateway:

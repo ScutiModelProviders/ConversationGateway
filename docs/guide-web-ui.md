@@ -7,3 +7,5 @@ Shared admin files copied byte-identical from Bard. Limits: 500 messages, 400000
 <!-- Task 3: Upstream failures carry safe error kinds and bounded Retry-After; no retries. -->
 
 <!-- Task 4: Anthropic Messages: tools, signed thinking state, schema via forced tool, cache breakpoints and native SSE. -->
+
+<!-- Task 5: OpenAI Chat Completions, Responses and Azure; compatible servers including Gemini; native SSE and tool mapping. -->
