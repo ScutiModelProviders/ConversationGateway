@@ -7,7 +7,9 @@ import httpx
 
 from src.gateways.base import BaseGateway
 
-PROVIDERS: dict[str, type[BaseGateway]] = {}  # filled in by tasks 4 to 6
+from src.gateways.anthropic import AnthropicGateway
+
+PROVIDERS: dict[str, type[BaseGateway]] = {"anthropic": AnthropicGateway}
 
 
 def build_gateway(gateway_id: str, entry: dict[str, Any], transport: httpx.AsyncBaseTransport | None = None) -> BaseGateway:
