@@ -17,3 +17,5 @@ Port 29407. Deployment files arrive in Task 10; operational guides in Task 12.
 <!-- Task 8: Chat service checks capabilities and token ceilings, caps concurrency, shapes replies and emulates streaming. -->
 
 <!-- Task 9: Authenticated chat, gateway listing and validation routes; own preset/variant gateway admin page; 64 MiB request bodies. -->
+
+Docker and Windows launchers use port 29407. Docker build remains unverified.

@@ -17,3 +17,5 @@ Shared admin files copied byte-identical from Bard. Limits: 500 messages, 400000
 <!-- Task 8: Chat service checks capabilities and token ceilings, caps concurrency, shapes replies and emulates streaming. -->
 
 <!-- Task 9: Authenticated chat, gateway listing and validation routes; own preset/variant gateway admin page; 64 MiB request bodies. -->
+
+Docker and Windows launchers use port 29407. Docker build remains unverified.

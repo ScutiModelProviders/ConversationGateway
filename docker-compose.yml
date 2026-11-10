@@ -1,0 +1,32 @@
+# ConversationGateway HTTP service for chat models; no model runs here.
+# Start: docker compose up -d --build (callers use http://conversationgateway:29407/api/chat).
+# Needs a .env next to this file with SERVICE_ADMIN_PASSWORD; create callers' tokens on /admin/. See .env.example.
+# Connect Anthropic, OpenAI, Gemini or CNV model services on /admin/gateways.html.
+name: conversationgateway
+
+services:
+  conversationgateway:
+    build: .
+    restart: unless-stopped
+    environment:
+      SERVICE_ADMIN_PASSWORD: ${SERVICE_ADMIN_PASSWORD:?set SERVICE_ADMIN_PASSWORD in .env (it unlocks the token page)}
+    ports:
+      - "${SERVICE_BIND:-0.0.0.0}:${SERVICE_PORT:-29407}:29407"
+    volumes:
+      - conversationgateway_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:29407/health')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+    networks: [citadel]
+
+volumes:
+  conversationgateway_data:
+
+networks:
+  # Join the Citadel stack's network so armory/ember_api can reach http://conversationgateway:29407.
+  # Start the Citadel stack first: it creates this network.
+  citadel:
+    name: citadel_core
+    external: true
