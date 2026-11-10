@@ -9,8 +9,9 @@ from src.gateways.base import BaseGateway
 
 from src.gateways.anthropic import AnthropicGateway
 from src.gateways.openai import OpenAIGateway
+from src.gateways.scuti import ScutiGateway
 
-PROVIDERS: dict[str, type[BaseGateway]] = {"anthropic": AnthropicGateway, "openai": OpenAIGateway}
+PROVIDERS: dict[str, type[BaseGateway]] = {"anthropic": AnthropicGateway, "openai": OpenAIGateway, "scuti": ScutiGateway}
 
 
 def build_gateway(gateway_id: str, entry: dict[str, Any], transport: httpx.AsyncBaseTransport | None = None) -> BaseGateway:

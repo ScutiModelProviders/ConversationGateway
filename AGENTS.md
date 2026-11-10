@@ -19,3 +19,5 @@ Use uv; Windows UV_CACHE_DIR=D:/User/.uv-cache and UV_LINK_MODE=copy. Test: uv r
 <!-- Task 4: Anthropic Messages: tools, signed thinking state, schema via forced tool, cache breakpoints and native SSE. -->
 
 <!-- Task 5: OpenAI Chat Completions, Responses and Azure; compatible servers including Gemini; native SSE and tool mapping. -->
+
+<!-- Task 6: CNV chat and NDJSON, tools and thinking; images forwarded using unverified images field. Scuti refuses model overrides. -->
