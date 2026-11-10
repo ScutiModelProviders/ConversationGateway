@@ -165,5 +165,3 @@ Task 11 sibling parity registrations and shared documentation remain the user's 
 - [Docker on this PC](docs/guide-docker-same-device.md)
 - [Docker on another machine](docs/guide-docker-deployment-device.md)
 - [Run without Docker](docs/guide-no-docker-same-device.md)
-- [Design](docs/superpowers/specs/2026-11-10-conversation-gateway-design.md)
-- [Implementation plan](docs/superpowers/plans/2026-11-10-conversation-gateway.md)
