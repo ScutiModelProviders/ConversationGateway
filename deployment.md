@@ -11,3 +11,5 @@ Port 29407. Deployment files arrive in Task 10; operational guides in Task 12.
 <!-- Task 5: OpenAI Chat Completions, Responses and Azure; compatible servers including Gemini; native SSE and tool mapping. -->
 
 <!-- Task 6: CNV chat and NDJSON, tools and thinking; images forwarded using unverified images field. Scuti refuses model overrides. -->
+
+<!-- Task 7: Saved gateways validate provider variants, preserve omitted secrets, expose presence flags, and offer provider presets. -->
