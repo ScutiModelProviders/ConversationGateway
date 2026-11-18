@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Icon buttons on the Gateways page
+
+The actions of a saved gateway (Test, Edit, Delete, and Models where a preset has a model list) are square icon buttons of one size, each with a tooltip and a screen-reader name.
+
 ### Test works without a model list; LiteLLM and vLLM addresses
 
 The Test button on a gateway falls back to a one-token chat when the provider has no model list (Perplexity and some Anthropic-compatible gateways), instead of reporting a failure. A wrong key is still reported as a wrong key. The LiteLLM and vLLM presets fill in their usual local addresses (`http://127.0.0.1:4000` and `http://127.0.0.1:8000/v1`); change them if the server runs elsewhere.
