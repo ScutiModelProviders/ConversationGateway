@@ -54,3 +54,12 @@ def register(mcp: FastMCP, *, admin_password: str, store: GatewayStore, service:
             return JSONResponse({"ok": True, "message": await service.test(request.path_params["gateway_id"])})
         except GatewayError as error:
             return JSONResponse({"ok": False, "detail": error.message}, status_code=error.status if error.status == 404 else 200)
+
+    @mcp.custom_route("/admin/gateways/{gateway_id}/models", methods=["GET"])
+    async def models(request: Request) -> Response:
+        if (refused := denied(request)) is not None:
+            return refused
+        try:
+            return JSONResponse({"ok": True, "models": await service.models(request.path_params["gateway_id"])})
+        except GatewayError as error:
+            return JSONResponse({"ok": False, "detail": error.message}, status_code=error.status if error.status == 404 else 200)

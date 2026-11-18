@@ -193,6 +193,13 @@ class AnthropicGateway(BaseGateway):
                 content.append(block)
             yield "done", build_result({"content": content, "stop_reason": meta["stop_reason"], "usage": usage, "model": meta["model"]}, schema_name)
 
+    async def models(self) -> list[str]:
+        if self.entry.get("auth", "key") != "key":  # Bedrock and Vertex have no model list
+            return await super().models()
+        async with self.guard():
+            page = await self.client.models.list(limit=1000)
+        return sorted({str(item.id) for item in page.data})
+
     async def probe(self) -> str:
         if self.entry.get("auth", "key") == "key":
             try:

@@ -181,3 +181,15 @@ async def test_probe_asks_for_a_token_when_the_gateway_has_no_model_list():
 
     assert "accepted" in await gateway(handler).probe()
     assert paths == ["/v1/models", "/v1/messages"]
+
+
+async def test_models_lists_the_ids_the_provider_offers():
+    body = {"data": [{"id": "claude-b", "type": "model", "display_name": "B", "created_at": "2026-01-01T00:00:00Z"},
+                     {"id": "claude-a", "type": "model", "display_name": "A", "created_at": "2026-01-01T00:00:00Z"}],
+            "has_more": False, "first_id": "claude-b", "last_id": "claude-a"}
+
+    def handler(request):
+        assert request.url.path == "/v1/models"
+        return httpx.Response(200, json=body)
+
+    assert await gateway(handler).models() == ["claude-a", "claude-b"]

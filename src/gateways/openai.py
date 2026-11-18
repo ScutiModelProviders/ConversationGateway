@@ -262,6 +262,13 @@ class OpenAIGateway(BaseGateway):
         await self.complete_ping()
         return "The provider accepted the credentials."
 
+    async def models(self) -> list[str]:
+        if self.entry.get("auth") == "azure":  # Azure lists deployments through another API
+            return await super().models()
+        async with self.guard():
+            page = await self.client.models.list()
+        return sorted({str(item.id) for item in page.data})[:1000]
+
     async def complete_ping(self) -> None:
         from src.contract import ChatRequest as Request
         ping = Request(self.id, None, None, [{"role": "user", "content": [{"type": "text", "text": "ping"}]}], [], None, None, None,

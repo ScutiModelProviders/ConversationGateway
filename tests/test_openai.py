@@ -242,3 +242,21 @@ async def test_probe_does_not_hide_a_wrong_key_behind_the_fallback():
     with pytest.raises(GatewayError) as error:
         await gateway(handler).probe()
     assert error.value.kind == "auth"
+
+
+async def test_models_lists_what_the_provider_offers_sorted_and_without_duplicates():
+    def handler(request):
+        assert request.url.path == "/v1/models" and request.headers["authorization"] == "Bearer sk-secret"
+        return httpx.Response(200, json={"object": "list", "data": [{"id": "b", "object": "model", "created": 1, "owned_by": "x"},
+                                                                    {"id": "a", "object": "model", "created": 1, "owned_by": "x"},
+                                                                    {"id": "a", "object": "model", "created": 1, "owned_by": "x"}]})
+
+    assert await gateway(handler).models() == ["a", "b"]
+
+
+async def test_azure_has_no_model_list():
+    azure = {"provider": "openai", "auth": "azure", "api": "responses", "api_key": "k", "azure_endpoint": "https://x.openai.azure.com",
+             "api_version": "2025-01-01", "model": "dep", "timeout_s": 5}
+    with pytest.raises(GatewayError) as error:
+        await gateway(lambda r: httpx.Response(200, json={}), azure).models()
+    assert error.value.code == "models_unsupported"

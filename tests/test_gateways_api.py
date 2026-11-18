@@ -58,3 +58,10 @@ def test_failed_probe_reports_safe_detail(tmp_path):
     c.put("/admin/gateways/local", headers=PW, json={"provider": "scuti", "url": "http://127.0.0.1:29202"})
     result = c.post("/admin/gateways/local/test", headers=PW).json()
     assert result["ok"] is False and "not ready" in result["detail"]
+
+def test_models_route_refuses_a_service_with_no_list_and_needs_the_password(client):
+    client.put("/admin/gateways/local", headers=PW, json={"provider": "scuti", "url": "http://127.0.0.1:29202"})
+    assert client.get("/admin/gateways/local/models").status_code == 401
+    reply = client.get("/admin/gateways/local/models", headers=PW).json()
+    assert reply["ok"] is False and "no model list" in reply["detail"]
+    assert client.get("/admin/gateways/nope/models", headers=PW).status_code == 404
