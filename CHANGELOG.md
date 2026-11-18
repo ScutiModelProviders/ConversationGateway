@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Links to each provider's model list
+
+The Gateways page shows a link to the provider's list of model names under the Model field, and a Models button on each saved gateway whose id is a preset (Claude, GPT, OpenRouter, Groq and the others). Scuti services and OmniRoute have no link.
+
 ### Presets grouped by provider
 
 The Start from list on the Gateways page groups the presets under Anthropic, OpenAI and compatible, and Scuti model services.

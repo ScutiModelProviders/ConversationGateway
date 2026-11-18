@@ -18,6 +18,8 @@ Open pages using the tabs below the service name. Overview shows live readiness 
 
 ## Gateways
 
+Under the Model field, a link opens the provider's page of model names in a new tab. Each saved gateway named like a preset also has a Models button for the same page.
+
 Open `/admin/gateways.html`, enter the password and Load gateways. Start from selects a preset and fills id, provider, variant, fields and capabilities. Provider is anthropic, openai or scuti; Variant selects key/bedrock/vertex or key/azure. Fill empty addresses and deployment/model names locally; addresses are never inferred from environment placeholders.
 
 Choose OpenAI API chat or responses and optionally its token-limit parameter. Common options are model, label, timeout (default 300 seconds), default max tokens and max tokens limit. Capability controls default/yes/no override streams, images, tools, reasoning and schema; default uses adapter defaults. The table shows capabilities and Scuti reachability; paid providers show a dash for reachability.

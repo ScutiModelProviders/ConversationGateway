@@ -94,3 +94,9 @@ def test_tier_models_are_saved_trimmed_and_cleared(store):
 def test_tier_models_are_checked(store, models):
     with pytest.raises(ValueError):
         store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m", "models": models})
+
+
+def test_model_list_links_are_https_and_only_on_presets_that_have_a_public_list():
+    linked = {name for name, entry in PRESETS.items() if "models_url" in entry}
+    assert all(PRESETS[name]["models_url"].startswith("https://") for name in linked)
+    assert {"claude", "gpt", "openrouter"} <= linked and not linked & {"minicpm", "bitnet", "lfm3", "sparkx", "omniroute"}
