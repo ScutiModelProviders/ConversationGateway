@@ -80,3 +80,17 @@ def test_every_preset_is_a_valid_entry_once_the_user_fills_the_gaps(store):
         filled.setdefault("api_key", "x")  # OpenAI itself needs a key; fields a variant does not use are ignored
         store.put(name, filled)
     assert {"gemini", "claude", "gpt", "minicpm", "bitnet", "lfm3", "sparkx"} <= set(PRESETS)
+
+
+def test_tier_models_are_saved_trimmed_and_cleared(store):
+    saved = store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m",
+                               "models": {"light": " small ", "heavy": ""}})
+    assert saved["models"] == {"light": "small"}
+    assert store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m"})["models"] == {"light": "small"}
+    assert "models" not in store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m", "models": {}})
+
+
+@pytest.mark.parametrize("models", [{"huge": "x"}, {"light": 3}, "light"])
+def test_tier_models_are_checked(store, models):
+    with pytest.raises(ValueError):
+        store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m", "models": models})

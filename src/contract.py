@@ -7,7 +7,8 @@ from typing import Any
 
 from src.errors import GatewayError
 
-TOP = {"gateway", "model", "system", "messages", "tools", "tool_choice", "schema", "reasoning", "max_tokens",
+TIERS = ("light", "standard", "heavy")
+TOP = {"gateway", "model", "tier", "system", "messages", "tools", "tool_choice", "schema", "reasoning", "max_tokens",
        "temperature", "cache", "stream"}
 BLOCKS = {  # role -> block type -> allowed keys
     "user": {"text": {"type", "text"}, "image": {"type", "media_type", "data"}},
@@ -47,6 +48,7 @@ class ChatRequest:
     temperature: float | None
     cache: bool
     stream: bool
+    tier: str | None = None  # light, standard or heavy: the gateway's saved model for that tier
 
     @property
     def uses(self) -> set[str]:
@@ -207,8 +209,14 @@ def parse_request(data: Any, limits: Limits) -> ChatRequest:
     model = data.get("model")
     if model is not None:
         model = _text(model, "model", 200)
+    tier = data.get("tier")
+    if tier is not None:
+        if tier not in TIERS:
+            raise bad("tier must be light, standard or heavy.")
+        if model is not None:
+            raise bad("send either model or tier, not both.")
     system = data.get("system")
     if system is not None:
         system = _text(system, "system", limits.max_text)
     return ChatRequest(gateway, model, system, messages, tools, choice, schema, reasoning, max_tokens,
-                       None if temperature is None else float(temperature), data.get("cache", False), data.get("stream", False))
+                       None if temperature is None else float(temperature), data.get("cache", False), data.get("stream", False), tier)

@@ -120,3 +120,28 @@ async def test_test_unknown_gateway_is_404(store):
     with pytest.raises(GatewayError) as error:
         await service(store).test("nope")
     assert error.value.status == 404
+
+
+async def test_a_tier_picks_the_model_the_gateway_saved_for_it(tmp_path):
+    sent = []
+
+    def handler(request):
+        sent.append(json.loads(request.content)["model"])
+        return httpx.Response(200, json={"id": "1", "model": sent[-1], "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+                                         "usage": {"prompt_tokens": 1, "completion_tokens": 1}})
+
+    s = GatewayStore(tmp_path / "gateways.json")
+    s.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "api": "chat", "model": "base",
+                   "models": {"light": "small"}})
+    svc = service(s, handler)
+    await svc.chat(chat("vllm", tier="light"))
+    await svc.chat(chat("vllm", tier="heavy"))  # no model saved for heavy: the gateway's own model
+    await svc.chat(chat("vllm", model="asked"))
+    assert sent == ["small", "base", "asked"]
+
+
+def test_tier_and_model_together_are_refused():
+    with pytest.raises(GatewayError):
+        chat("g", tier="light", model="m")
+    with pytest.raises(GatewayError):
+        chat("g", tier="giant")

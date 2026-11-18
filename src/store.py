@@ -10,6 +10,7 @@ from typing import Any
 
 from src import runtime
 from src.admin_api import MAX_TOKEN, _valid_url
+from src.contract import TIERS
 from src.gateways.base import CAPABILITIES
 
 ID = re.compile(r"[a-z0-9][a-z0-9_-]{0,47}")
@@ -135,6 +136,13 @@ class GatewayStore:
                 entry["stream_usage"] = usage
         if (model := text("model", "The model", provider != "scuti", 200)) is not None:
             entry["model"] = model
+        models = pick("models")
+        if models is not None:
+            if (not isinstance(models, dict) or set(models) - set(TIERS) or provider == "scuti"
+                    or not all(isinstance(v, str) and len(v.strip()) <= 200 for v in models.values())):
+                raise ValueError("The models are text of at most 200 characters for: " + ", ".join(TIERS) + " (not for a Scuti service).")
+            if models := {k: v.strip() for k, v in models.items() if v.strip()}:
+                entry["models"] = models
         if (label := text("label", "The label", False, 80)) is not None:
             entry["label"] = label
         timeout = pick("timeout_s") if pick("timeout_s") is not None else DEFAULT_TIMEOUT

@@ -78,6 +78,8 @@ class ChatService:
     @classmethod
     def _prepare(cls, gateway: BaseGateway, request: ChatRequest) -> ChatRequest:
         """Apply defaults and ceilings to the effective output limit."""
+        if request.tier:  # a tier names the model this gateway saved for it; none saved = the gateway's own model
+            request = replace(request, model=(gateway.entry.get("models") or {}).get(request.tier), tier=None)
         cls._check(gateway, request)
         if request.max_tokens is not None:
             return request
