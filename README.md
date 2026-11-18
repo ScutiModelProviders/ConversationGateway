@@ -83,7 +83,7 @@ Save gateway entries on `/admin/gateways.html`. Secrets are write-only; public e
 | anthropic / key | API key; optional base URL; model | claude, helicone, litellm, openrouter, portkey, omniroute |
 | anthropic / bedrock | AWS region, access key id, secret access key; model | bedrock |
 | anthropic / vertex | Google project id, region; model; host Google credentials | vertex |
-| openai / key | API key or custom base URL; model; `api: chat` or `responses` | gpt (responses), gemini, deepinfra, fireworks, groq, ollama, opencode, perplexity, together, vllm |
+| openai / key | API key or custom base URL; model; `api: chat` or `responses` | gpt (responses), gemini, deepinfra, fireworks, freellmapi, groq, ollama, opencode, perplexity, together, vllm |
 | openai / azure | Azure endpoint, API version, API key, deployment model; API selection | azure (responses) |
 | scuti | Model-service URL; optional token and project | minicpm 29200, bitnet 29201, lfm3 29202, sparkx 29203 |
 
