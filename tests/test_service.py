@@ -146,3 +146,15 @@ def test_tier_and_model_together_are_refused():
         chat("g", tier="light", model="m")
     with pytest.raises(GatewayError):
         chat("g", tier="giant")
+
+
+async def test_a_test_that_gets_no_answer_gives_up_with_a_message(store, monkeypatch):
+    import asyncio
+
+    async def silent(request):
+        await asyncio.sleep(30)
+
+    monkeypatch.setattr("src.service.TEST_SECONDS", 0.2)
+    with pytest.raises(GatewayError) as error:
+        await service(store, silent).test("lfm3")
+    assert error.value.code == "gateway_timeout" and "No answer within" in error.value.message

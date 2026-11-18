@@ -17,6 +17,7 @@ from src.store import GatewayStore
 
 REACHABLE_SECONDS = 15.0
 PROBE_SECONDS = 3.0
+TEST_SECONDS = 20.0  # the Test button gives up here; a gateway's own timeout is for chats
 USAGE = ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_tokens")
 
 
@@ -220,4 +221,7 @@ class ChatService:
             raise GatewayError(404, "unknown_gateway", f"There is no gateway named '{gateway_id}'.") from None
         self._reachable.pop(gateway_id, None)
         async with self._lease(gateway):
-            return await gateway.probe()
+            try:
+                return await asyncio.wait_for(gateway.probe(), TEST_SECONDS)
+            except asyncio.TimeoutError:
+                raise GatewayError(504, "gateway_timeout", f"No answer within {TEST_SECONDS:.0f} seconds. Check the address and that the service is running.", kind="unavailable") from None
