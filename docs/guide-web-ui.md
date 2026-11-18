@@ -18,7 +18,7 @@ Open pages using the tabs below the service name. Overview shows live readiness 
 
 ## Gateways
 
-The Models link of an `omniroute` gateway opens OmniRoute's own dashboard (port 29651) in a new tab, because it has no public model list: on the host of the saved address, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`.
+The Models link of an `omniroute` gateway opens OmniRoute's own dashboard (port 29651), and that of a `freellmapi` gateway opens FreeLLMAPI's (port 29652), in a new tab, because it has no public model list: on the host of the saved address, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`.
 
 The list icon on a gateway row asks the provider for its model names with the saved key and shows them in a filterable list; click a name to copy it. Gateways without a model list (Scuti, Bedrock, Vertex, Azure) have no such button.
 

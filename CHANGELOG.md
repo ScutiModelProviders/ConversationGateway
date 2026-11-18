@@ -4,7 +4,7 @@
 
 ### FreeLLMAPI preset
 
-New `freellmapi` preset for the FreeLLMAPI router (AI/ModelEngines/FreeLLMApiService): provider `openai`, `api: chat`, starting address `http://127.0.0.1:29652/v1`. Set the address to the host that runs it, add its API key and a model name. It has no public model list, so use the List models button.
+New `freellmapi` preset for the FreeLLMAPI router (AI/ModelEngines/FreeLLMApiService): provider `openai`, `api: chat`, starting address `http://127.0.0.1:29652/v1`. Set the address to the host that runs it, add its API key and a model name. It has no public model list, so its Models link opens the dashboard of your own FreeLLMAPI (port 29652) in a new tab, on the host the saved address names, like OmniRoute. The List models button still shows the names in the page.
 
 ### OmniRoute links to its own dashboard
 

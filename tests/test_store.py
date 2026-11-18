@@ -109,7 +109,7 @@ def test_self_hosted_presets_start_from_their_usual_local_address():
 def test_freellmapi_preset_is_openai_chat_on_its_service_port_with_no_public_list():
     preset = PRESETS["freellmapi"]
     assert (preset["provider"], preset["api"], preset["base_url"]) == ("openai", "chat", "http://127.0.0.1:29652/v1")
-    assert "models_url" not in preset
+    assert "models_url" not in preset and preset["dashboard_port"] == 29652
 
 
 def test_omniroute_has_no_public_list_but_names_its_dashboard_port():

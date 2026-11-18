@@ -120,7 +120,8 @@ PRESETS.update({
     "label": "FreeLLMAPI",
     "base_url": "http://127.0.0.1:29652/v1",
     "model": "",
-    "api": "chat"
+    "api": "chat",
+    "dashboard_port": 29652
   }
 })
 
