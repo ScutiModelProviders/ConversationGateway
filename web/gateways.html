@@ -120,7 +120,12 @@ async function load() {
   try {
     const data = await call("GET", "/admin/gateways"); providers = data.form.providers; presets = data.presets;
     $("preset").replaceChildren(new Option("Choose a preset", ""));
-    for (const [id, entry] of Object.entries(presets)) $("preset").add(new Option(entry.label || id, id));
+    const groups = {anthropic: "Anthropic (Claude and compatible gateways)", openai: "OpenAI and compatible (including Gemini, Azure)", scuti: "Scuti model services"};
+    for (const [provider, title] of Object.entries(groups)) {
+      const group = document.createElement("optgroup"); group.label = title;
+      for (const [id, entry] of Object.entries(presets)) if (entry.provider === provider) group.append(new Option(entry.label || id, id));
+      if (group.children.length) $("preset").append(group);
+    }
     variants();
     const rows = $("rows"); rows.replaceChildren();
     for (const g of data.gateways) {
