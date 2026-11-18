@@ -220,3 +220,25 @@ async def test_errors_are_classified_and_secret_free(status, kind):
 def test_no_key_is_allowed_for_a_local_server():
     g = gateway(lambda r: None, {"provider": "openai", "api": "chat", "base_url": "http://127.0.0.1:11434/v1", "model": "qwen", "timeout_s": 5})
     assert g.provider == "openai"
+
+
+async def test_probe_asks_for_tokens_when_the_provider_has_no_model_list():
+    paths = []
+
+    def handler(request):
+        paths.append(request.url.path)
+        if request.url.path.endswith("/models"):
+            return httpx.Response(404, json={"error": {"message": "no such route"}})
+        return httpx.Response(200, json=COMPLETION)
+
+    assert "accepted" in await gateway(handler).probe()
+    assert paths == ["/v1/models", "/v1/chat/completions"]
+
+
+async def test_probe_does_not_hide_a_wrong_key_behind_the_fallback():
+    def handler(request):
+        return httpx.Response(401, json={"error": {"message": "bad key"}})
+
+    with pytest.raises(GatewayError) as error:
+        await gateway(handler).probe()
+    assert error.value.kind == "auth"

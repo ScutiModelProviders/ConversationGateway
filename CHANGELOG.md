@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Test works without a model list; LiteLLM and vLLM addresses
+
+The Test button on a gateway falls back to a one-token chat when the provider has no model list (Perplexity and some Anthropic-compatible gateways), instead of reporting a failure. A wrong key is still reported as a wrong key. The LiteLLM and vLLM presets fill in their usual local addresses (`http://127.0.0.1:4000` and `http://127.0.0.1:8000/v1`); change them if the server runs elsewhere.
+
 ### Links to each provider's model list
 
 The Gateways page shows a link to the provider's list of model names under the Model field, and a Models button on each saved gateway whose id is a preset (Claude, GPT, OpenRouter, Groq and the others). Scuti services and OmniRoute have no link.

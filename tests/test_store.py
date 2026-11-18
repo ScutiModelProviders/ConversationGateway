@@ -100,3 +100,7 @@ def test_model_list_links_are_https_and_only_on_presets_that_have_a_public_list(
     linked = {name for name, entry in PRESETS.items() if "models_url" in entry}
     assert all(PRESETS[name]["models_url"].startswith("https://") for name in linked)
     assert {"claude", "gpt", "openrouter"} <= linked and not linked & {"minicpm", "bitnet", "lfm3", "sparkx", "omniroute"}
+
+
+def test_self_hosted_presets_start_from_their_usual_local_address():
+    assert PRESETS["litellm"]["base_url"] == "http://127.0.0.1:4000" and PRESETS["vllm"]["base_url"] == "http://127.0.0.1:8000/v1"

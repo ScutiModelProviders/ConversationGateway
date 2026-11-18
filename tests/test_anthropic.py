@@ -168,3 +168,16 @@ async def test_truncated_stream_is_an_error():
 def test_capabilities_and_override():
     assert gateway(lambda r: None).capabilities == {"streams": True, "images": True, "tools": True, "reasoning": True, "schema": True}
     assert gateway(lambda r: None, {**ENTRY, "capabilities": {"images": False}}).can("images") is False
+
+
+async def test_probe_asks_for_a_token_when_the_gateway_has_no_model_list():
+    paths = []
+
+    def handler(request):
+        paths.append(request.url.path)
+        if request.url.path.endswith("/models"):
+            return httpx.Response(404, json={"type": "error", "error": {"type": "not_found_error", "message": "no such route"}})
+        return httpx.Response(200, json=MESSAGE)
+
+    assert "accepted" in await gateway(handler).probe()
+    assert paths == ["/v1/models", "/v1/messages"]

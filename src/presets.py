@@ -33,6 +33,7 @@ PRESETS.update({
     "provider": "anthropic",
     "auth": "key",
     "label": "LiteLLM",
+    "base_url": "http://127.0.0.1:4000",
     "model": "claude-sonnet-5-5"
   },
   "omniroute": {
@@ -107,6 +108,7 @@ PRESETS.update({
     "provider": "openai",
     "auth": "key",
     "label": "vLLM",
+    "base_url": "http://127.0.0.1:8000/v1",
     "model": "",
     "api": "chat"
   }
