@@ -107,4 +107,4 @@ def test_self_hosted_presets_start_from_their_usual_local_address():
 
 
 def test_omniroute_has_no_public_list_but_names_its_dashboard_port():
-    assert "models_url" not in PRESETS["omniroute"] and PRESETS["omniroute"]["dashboard_port"] == 20128
+    assert "models_url" not in PRESETS["omniroute"] and PRESETS["omniroute"]["dashboard_port"] == 29651
