@@ -69,6 +69,10 @@ class BaseGateway:
     async def probe(self) -> str:
         raise NotImplementedError
 
+    async def models(self) -> list[str]:
+        """The model names the provider lists for this key. Services and providers without a list refuse."""
+        raise GatewayError(422, "models_unsupported", f"The gateway '{self.id}' has no model list.")
+
 
 def truncated(name: str = "The model service") -> GatewayError:
     return GatewayError(502, "gateway_bad_reply", f"{name} ended its reply before completion.", kind="unavailable")

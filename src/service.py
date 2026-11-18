@@ -215,6 +215,17 @@ class ChatService:
             out.append(item)
         return out
 
+    async def models(self, gateway_id: str) -> list[str]:
+        try:
+            gateway = await self._gateway(gateway_id)
+        except GatewayError:
+            raise GatewayError(404, "unknown_gateway", f"There is no gateway named '{gateway_id}'.") from None
+        async with self._lease(gateway):
+            try:
+                return await asyncio.wait_for(gateway.models(), TEST_SECONDS)
+            except asyncio.TimeoutError:
+                raise GatewayError(504, "gateway_timeout", f"No answer within {TEST_SECONDS:.0f} seconds. Check the address and that the service is running.", kind="unavailable") from None
+
     async def test(self, gateway_id: str) -> str:
         try:
             gateway = await self._gateway(gateway_id)

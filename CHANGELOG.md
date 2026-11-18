@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### List models
+
+A gateway that has a model list (Anthropic and OpenAI-compatible with a key, such as OmniRoute, OpenRouter, Ollama, vLLM, Claude and GPT) gets a List models button. The service asks the provider with the saved key (`GET /admin/gateways/{id}/models`) and the page shows the names in a filterable list; click one to copy it. Scuti services, Bedrock, Vertex and Azure have no list and no button.
+
 ### Reachable shows the result of the last Test
 
 The Reachable column stayed `-` for Anthropic and OpenAI gateways, because a listing never spends a request on a paid provider. It now shows the result of the last Test (`yes` or `no`, `-` until one ran), updates the row at once, and is cleared when the gateway is edited. Scuti services are still checked on every load.

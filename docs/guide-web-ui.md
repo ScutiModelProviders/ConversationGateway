@@ -18,6 +18,8 @@ Open pages using the tabs below the service name. Overview shows live readiness 
 
 ## Gateways
 
+The list icon on a gateway row asks the provider for its model names with the saved key and shows them in a filterable list; click a name to copy it. Gateways without a model list (Scuti, Bedrock, Vertex, Azure) have no such button.
+
 Under the Model field, a link opens the provider's page of model names in a new tab. Each saved gateway named like a preset also has a Models button for the same page.
 
 Open `/admin/gateways.html`, enter the password and Load gateways. Start from selects a preset and fills id, provider, variant, fields and capabilities. Provider is anthropic, openai or scuti; Variant selects key/bedrock/vertex or key/azure. Fill empty addresses and deployment/model names locally; addresses are never inferred from environment placeholders.
