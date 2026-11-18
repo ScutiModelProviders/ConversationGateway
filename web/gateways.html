@@ -49,6 +49,12 @@
     <label for="max_tokens_param">Token limit parameter</label><select id="max_tokens_param"><option value="">Default</option><option>max_tokens</option><option>max_completion_tokens</option></select>
   </div>
   <label for="model">Model</label><input id="model" autocomplete="off">
+  <div id="tier-fields">
+    <p class="muted">Model for each strength tier. A caller that asks for a tier (Legion does) gets this model; an empty tier uses the model above. Not used by Scuti services.</p>
+    <label for="tier-light">Light model</label><input id="tier-light" autocomplete="off">
+    <label for="tier-standard">Standard model</label><input id="tier-standard" autocomplete="off">
+    <label for="tier-heavy">Heavy model</label><input id="tier-heavy" autocomplete="off">
+  </div>
   <label for="label">Label</label><input id="label" autocomplete="off" maxlength="80">
   <label for="timeout_s">Timeout (seconds)</label><input id="timeout_s" type="number" min="1" max="1800" value="300">
   <label for="default_max_tokens">Default max tokens</label><input id="default_max_tokens" type="number" min="1" max="1000000">
@@ -60,6 +66,7 @@
 <script>
 let providers = {}, presets = {};
 const caps = ["streams", "images", "tools", "reasoning", "schema"];
+const tiers = ["light", "standard", "heavy"];
 const $ = (id) => document.getElementById(id);
 const say = (text, cls = "") => { $("status").className = cls; $("status").textContent = text; };
 const call = async (method, path, body) => {
@@ -78,6 +85,7 @@ function drawFields(saved = {}) {
   const provider = $("provider").value;
   $("variant-wrap").hidden = provider === "scuti";
   $("openai-fields").hidden = provider !== "openai";
+  $("tier-fields").hidden = provider === "scuti";
   $("fields").replaceChildren();
   for (const [name, label, secret, required] of providers[provider]?.[provider === "scuti" ? "" : $("variant").value] || []) {
     const l = document.createElement("label"); l.htmlFor = name; l.textContent = label + (required ? " *" : "");
@@ -116,6 +124,7 @@ async function load() {
 function edit(g) {
   $("gid").value = g.id; $("provider").value = g.provider; variants(g);
   for (const name of ["model", "label", "default_max_tokens", "max_tokens_limit", "max_tokens_param"]) $(name).value = g[name] ?? "";
+  for (const tier of tiers) $("tier-" + tier).value = g.models?.[tier] ?? "";
   $("api").value = g.api || "chat"; $("timeout_s").value = g.timeout_s || 300;
   for (const cap of caps) $("cap-" + cap).value = g.capabilities?.[cap] == null ? "default" : g.capabilities[cap] ? "yes" : "no";
   $("gid").focus();
@@ -133,6 +142,7 @@ $("form").onsubmit = async (event) => {
   const names = ["model", "label", "timeout_s", "default_max_tokens", "max_tokens_limit", ...(providers[provider]?.[auth] || []).map(f => f[0])];
   if (provider === "openai") names.push("api", "max_tokens_param");
   for (const name of names) { const v = $(name).value.trim(); if (v) body[name] = $(name).type === "number" ? Number(v) : v; }
+  if (provider !== "scuti") body.models = Object.fromEntries(tiers.map(t => [t, $("tier-" + t).value.trim()]));
   body.capabilities = {};
   for (const cap of caps) { const value = $("cap-" + cap).value; if (value !== "default") body.capabilities[cap] = value === "yes"; }
   try { await call("PUT", `/admin/gateways/${$("gid").value}`, body); await load(); say("Saved.", "ok"); } catch (e) { say(e.message, "bad"); }

@@ -27,6 +27,7 @@ When an admin password is set, `/api/*` requires a caller token in `X-Internal-T
 |---|---|
 | `gateway` | Required saved id |
 | `model` | Optional override for Anthropic/OpenAI; Scuti runs one model and refuses overrides |
+| `tier` | Optional: `light`, `standard` or `heavy`. The gateway uses the model saved for that tier on its admin page, or its own `model` when none is saved. Send `model` or `tier`, not both |
 | `system` | Optional nonempty string; system messages are not allowed in `messages` |
 | `messages` | 1–500 messages by default; roles `user`, `assistant`, `tool` |
 | `tools` | Up to 128 definitions `{name, description?, parameters?}`; parameters default to an empty object schema |

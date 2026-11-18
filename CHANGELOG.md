@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### The gateway owns the model names per tier
+
+A saved gateway can keep a model name for each tier (light, standard, heavy) on the Gateways page. A caller sends `"tier": "light"` instead of a model id and gets that model; a tier with no name uses the gateway's own model. `model` still overrides, and a request cannot send both. Legion uses this so it no longer keeps model names for Azure and vLLM.
+
 ### Copy works on plain http and inside a frame
 
 The Copy buttons for a new token and for the addresses now fall back to a hidden text box when the browser refuses the clipboard API (plain http pages, framed pages such as ServiceHub). It is the same fallback the model services already had.
