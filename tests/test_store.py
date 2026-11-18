@@ -104,3 +104,7 @@ def test_model_list_links_are_https_and_only_on_presets_that_have_a_public_list(
 
 def test_self_hosted_presets_start_from_their_usual_local_address():
     assert PRESETS["litellm"]["base_url"] == "http://127.0.0.1:4000" and PRESETS["vllm"]["base_url"] == "http://127.0.0.1:8000/v1"
+
+
+def test_omniroute_has_no_public_list_but_names_its_dashboard_port():
+    assert "models_url" not in PRESETS["omniroute"] and PRESETS["omniroute"]["dashboard_port"] == 20128

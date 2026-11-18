@@ -185,9 +185,10 @@ async function load() {
       const tr = rows.insertRow();
       for (const v of [g.id, g.provider, g.model || g.url || g.base_url || g.azure_endpoint || "-", ...caps.map(c => g[c] ? "yes" : "no"), g.reachable == null ? "-" : g.reachable ? "yes" : "no"]) tr.insertCell().textContent = v;
       const actions = document.createElement("div"); actions.className = "actions"; tr.insertCell().append(actions);
-      if (presets[g.id]?.models_url) {
+      const listUrl = modelListUrl(g.id, g.base_url);
+      if (listUrl) {
         const a = iconButton("models", `Model names for ${g.id} (opens in a new tab)`, "a");
-        a.href = presets[g.id].models_url; a.target = "_blank"; a.rel = "noopener noreferrer"; actions.append(a);
+        a.href = listUrl; a.target = "_blank"; a.rel = "noopener noreferrer"; actions.append(a);
       }
       if (g.provider !== "scuti" && (g.auth || "key") === "key") {  // the others have no model list to ask for
         const b = iconButton("list", `List models of ${g.id}`); b.onclick = () => listModels(g.id, b); actions.append(b);
@@ -201,13 +202,27 @@ async function load() {
   } catch (e) { say(e.message, "bad"); }
   finally { $("load").disabled = false; }
 }
-function showModelList(id) {
-  const url = presets[id]?.models_url;
+// Where to read the model names of a gateway: the provider's public page, or for a service you run yourself
+// (OmniRoute) its own dashboard, reached from this browser on the host the saved address names.
+function modelListUrl(id, baseUrl) {
+  const preset = presets[id];
+  if (preset?.models_url) return preset.models_url;
+  if (!preset?.dashboard_port) return "";
+  let host = "";
+  try { host = new URL(baseUrl).hostname; } catch {}
+  if (!host || ["host.docker.internal", "localhost", "127.0.0.1", "[::1]", id].includes(host)) host = location.hostname;
+  return `${location.protocol === "https:" ? "https:" : "http:"}//${host}:${preset.dashboard_port}/`;
+}
+function showModelList(id, baseUrl = "") {
+  const url = modelListUrl(id, baseUrl);
   $("models-help").hidden = !url;
-  if (url) $("models-link").href = url;
+  if (url) {
+    $("models-link").href = url;
+    $("models-link").textContent = presets[id].models_url ? "Model names of this provider" : "The dashboard of this service, with its models";
+  }
 }
 function edit(g) {
-  showModelList(g.id);
+  showModelList(g.id, g.base_url);
   $("gid").value = g.id; $("provider").value = g.provider; variants(g);
   for (const name of ["model", "label", "default_max_tokens", "max_tokens_limit", "max_tokens_param"]) $(name).value = g[name] ?? "";
   for (const tier of tiers) $("tier-" + tier).value = g.models?.[tier] ?? "";
@@ -273,7 +288,7 @@ async function test(id, button) {
 }
 async function remove(id) { if (!confirm(`Delete the gateway "${id}"?`)) return; try { await call("DELETE", `/admin/gateways/${id}`); await load(); } catch (e) { say(e.message, "bad"); } }
 $("load").onclick = load;
-$("gid").oninput = () => showModelList($("gid").value.trim());
+$("gid").oninput = () => showModelList($("gid").value.trim(), $("base_url")?.value);
 if (new URLSearchParams(location.search).has("embed")) {  // shown in the admin sidebar: the signed-in password is reused
   document.body.classList.add("embedded");
   try { $("pw").value = sessionStorage.getItem("admin") || ""; } catch {}
