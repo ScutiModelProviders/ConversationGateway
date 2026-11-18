@@ -114,7 +114,7 @@ Own errors: 422 invalid body, unknown gateway or capability mismatch; 413 oversi
 
 ## Admin page
 
-Shared navigation provides Overview, Playground, Access tokens, Model connections, Runtime & settings, Usage and Connect & API. No fixed model slots or service-specific Playground operations are registered. Manage gateways on the separate page linked from Connect & API; [web UI guide](docs/guide-web-ui.md).
+Navigation provides Overview, Playground, Access tokens, Gateways, Runtime & settings, Usage and Connections. Gateways holds the gateway list and editor, including each gateway's light, standard and heavy model (the same editor is also at `/admin/gateways.html`). No fixed model slots or service-specific Playground operations are registered; [web UI guide](docs/guide-web-ui.md).
 
 ## Settings and environment
 

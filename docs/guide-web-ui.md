@@ -4,15 +4,17 @@ Set SERVICE_ADMIN_PASSWORD and open `http://127.0.0.1:29407/admin/`. Sign in wit
 
 ## Navigation
 
+Open pages using the tabs below the service name. Overview shows live readiness and request counts since restart. Use **Gateways** to list, add, test and change gateways without leaving the admin page.
+
 | Page | Behavior |
 |---|---|
 | Overview | Saved gateways and readiness; readiness means a gateway exists |
 | Playground | No registered chat operation; use the HTTP examples |
 | Access tokens | Create, expire, rate-limit and revoke cg_ caller tokens; new tokens shown once, stored hashed |
-| Model connections | No fixed slots; use the separate Gateways page |
+| Gateways | The gateway list and editor, including the light, standard and heavy model of each gateway |
 | Runtime & settings | Live limits, defaults and restart-applied Data folder |
 | Usage | Aggregate calls, errors and time per requester; reset on restart |
-| Connect & API | Addresses, routes and gateway-page link |
+| Connections | Addresses, routes and gateway-page link |
 
 ## Gateways
 
