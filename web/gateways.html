@@ -65,7 +65,7 @@
 <div id="status" role="status" aria-live="polite"></div>
 <h2>Saved gateways</h2>
 <div class="wrap"><table>
-  <thead><tr><th>Id</th><th>Provider</th><th>Model or address</th><th>Streams</th><th>Images</th><th>Tools</th><th>Reasoning</th><th>Schema</th><th>Reachable</th><th>Actions</th></tr></thead>
+  <thead><tr><th>Id</th><th>Provider</th><th>Model or address</th><th>Streams</th><th>Images</th><th>Tools</th><th>Reasoning</th><th>Schema</th><th title="Scuti services are checked on every load; the others show the result of the last Test.">Reachable</th><th>Actions</th></tr></thead>
   <tbody id="rows"><tr><td colspan="10" class="muted">Enter the admin password and load.</td></tr></tbody>
 </table></div>
 <h2>Add or change a gateway</h2>
@@ -204,6 +204,7 @@ async function test(id, button) {
   let ok = false;
   try {
     const r = await call("POST", `/admin/gateways/${id}/test`); ok = r.ok;
+    row.cells[8].textContent = ok ? "yes" : "no";
     say(ok ? `${id}: ${r.message}` : `${id}: ${r.detail}`, ok ? "ok" : "bad");
   } catch (e) { say(`${id}: ${e.message}`, "bad"); }
   finally {

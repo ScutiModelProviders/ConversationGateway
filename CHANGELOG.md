@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Reachable shows the result of the last Test
+
+The Reachable column stayed `-` for Anthropic and OpenAI gateways, because a listing never spends a request on a paid provider. It now shows the result of the last Test (`yes` or `no`, `-` until one ran), updates the row at once, and is cleared when the gateway is edited. Scuti services are still checked on every load.
+
 ### Test gives up after 20 seconds and shows it is working
 
 A Test against an address that never answered waited for the gateway's whole timeout (300 seconds by default) and showed nothing, so the button seemed dead. Test now stops after 20 seconds with "No answer within 20 seconds". While it waits, the button spins, the row breathes and the message counts the seconds; the result flashes the button green or red.
