@@ -7,7 +7,7 @@ from typing import Any
 
 from src.errors import GatewayError
 
-TIERS = ("light", "standard", "heavy")
+TIERS = ("light", "standard", "heavy", "extreme")
 TOP = {"gateway", "model", "tier", "system", "messages", "tools", "tool_choice", "schema", "reasoning", "max_tokens",
        "temperature", "cache", "stream"}
 BLOCKS = {  # role -> block type -> allowed keys
@@ -48,7 +48,7 @@ class ChatRequest:
     temperature: float | None
     cache: bool
     stream: bool
-    tier: str | None = None  # light, standard or heavy: the gateway's saved model for that tier
+    tier: str | None = None  # light, standard, heavy or extreme: the gateway's saved model for that tier
 
     @property
     def uses(self) -> set[str]:
@@ -212,7 +212,7 @@ def parse_request(data: Any, limits: Limits) -> ChatRequest:
     tier = data.get("tier")
     if tier is not None:
         if tier not in TIERS:
-            raise bad("tier must be light, standard or heavy.")
+            raise bad("tier must be light, standard, heavy or extreme.")
         if model is not None:
             raise bad("send either model or tier, not both.")
     system = data.get("system")

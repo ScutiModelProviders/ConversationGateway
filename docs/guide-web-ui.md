@@ -11,7 +11,7 @@ Open pages using the tabs below the service name. Overview shows live readiness 
 | Overview | Saved gateways and readiness; readiness means a gateway exists |
 | Playground | No registered chat operation; use the HTTP examples |
 | Access tokens | Create, expire, rate-limit and revoke cg_ caller tokens; new tokens shown once, stored hashed |
-| Gateways | The gateway list and editor, including the light, standard and heavy model of each gateway |
+| Gateways | The gateway list and editor, including the light, standard, heavy and extreme model of each gateway |
 | Runtime & settings | Live limits, defaults and restart-applied Data folder |
 | Usage | Aggregate calls, errors and time per requester; reset on restart |
 | Connections | Addresses, routes and gateway-page link |

@@ -84,9 +84,9 @@ def test_every_preset_is_a_valid_entry_once_the_user_fills_the_gaps(store):
 
 def test_tier_models_are_saved_trimmed_and_cleared(store):
     saved = store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m",
-                               "models": {"light": " small ", "heavy": ""}})
-    assert saved["models"] == {"light": "small"}
-    assert store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m"})["models"] == {"light": "small"}
+                               "models": {"light": " small ", "heavy": "", "extreme": "big"}})
+    assert saved["models"] == {"light": "small", "extreme": "big"}
+    assert store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m"})["models"] == {"light": "small", "extreme": "big"}
     assert "models" not in store.put("vllm", {"provider": "openai", "base_url": "http://h:8000/v1", "model": "m", "models": {}})
 
 

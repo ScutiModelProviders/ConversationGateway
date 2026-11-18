@@ -71,6 +71,7 @@
     <label for="tier-light">Light model</label><input id="tier-light" autocomplete="off">
     <label for="tier-standard">Standard model</label><input id="tier-standard" autocomplete="off">
     <label for="tier-heavy">Heavy model</label><input id="tier-heavy" autocomplete="off">
+    <label for="tier-extreme">Extreme model</label><input id="tier-extreme" autocomplete="off">
   </div>
   <label for="label">Label</label><input id="label" autocomplete="off" maxlength="80">
   <label for="timeout_s">Timeout (seconds)</label><input id="timeout_s" type="number" min="1" max="1800" value="300">
@@ -83,7 +84,7 @@
 <script>
 let providers = {}, presets = {};
 const caps = ["streams", "images", "tools", "reasoning", "schema"];
-const tiers = ["light", "standard", "heavy"];
+const tiers = ["light", "standard", "heavy", "extreme"];
 const $ = (id) => document.getElementById(id);
 const say = (text, cls = "") => { $("status").className = cls; $("status").textContent = text; };
 const call = async (method, path, body) => {

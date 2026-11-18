@@ -137,7 +137,8 @@ async def test_a_tier_picks_the_model_the_gateway_saved_for_it(tmp_path):
     await svc.chat(chat("vllm", tier="light"))
     await svc.chat(chat("vllm", tier="heavy"))  # no model saved for heavy: the gateway's own model
     await svc.chat(chat("vllm", model="asked"))
-    assert sent == ["small", "base", "asked"]
+    await svc.chat(chat("vllm", tier="extreme"))
+    assert sent == ["small", "base", "asked", "base"]
 
 
 def test_tier_and_model_together_are_refused():
