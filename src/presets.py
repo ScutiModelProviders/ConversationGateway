@@ -112,6 +112,15 @@ PRESETS.update({
     "base_url": "http://127.0.0.1:8000/v1",
     "model": "",
     "api": "chat"
+  },
+  # Self-hosted router over free provider tiers (AI/ModelEngines/FreeLLMApiService, host port 29652). No public model list.
+  "freellmapi": {
+    "provider": "openai",
+    "auth": "key",
+    "label": "FreeLLMAPI",
+    "base_url": "http://127.0.0.1:29652/v1",
+    "model": "",
+    "api": "chat"
   }
 })
 
