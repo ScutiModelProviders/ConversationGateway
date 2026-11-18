@@ -111,3 +111,28 @@ PRESETS.update({
     "api": "chat"
   }
 })
+
+# Where the provider lists its model names (shown as a link on the Gateways page). Scuti services run one fixed model;
+# OmniRoute has no public list. Links are not checked at run time.
+MODEL_LISTS = {
+    "claude": "https://platform.claude.com/docs/en/models/overview",
+    "bedrock": "https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html",
+    "vertex": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/claude",
+    "gpt": "https://developers.openai.com/api/docs/models",
+    "azure": "https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure",
+    "gemini": "https://aistudio.google.com/docs/models",
+    "ollama": "https://ollama.com/library",
+    "helicone": "https://www.helicone.ai/models",
+    "litellm": "https://docs.litellm.ai/docs/providers",
+    "openrouter": "https://openrouter.ai/models",
+    "portkey": "https://portkey.ai/models",
+    "deepinfra": "https://deepinfra.com/models",
+    "fireworks": "https://fireworks.ai/models",
+    "groq": "https://console.groq.com/docs/models",
+    "opencode": "https://opencode.ai/docs/console/models/",
+    "perplexity": "https://docs.perplexity.ai/docs/agent-api/models",
+    "together": "https://docs.together.ai/docs/serverless/models",
+    "vllm": "https://docs.vllm.ai/en/latest/models/supported_models/",
+}
+for _name, _url in MODEL_LISTS.items():
+    PRESETS[_name]["models_url"] = _url
