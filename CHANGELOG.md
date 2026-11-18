@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Test shows its result where you can see it
+
+The message of Test, Save and Delete sat under the long form, so pressing Test seemed to do nothing. It now sits above the table, scrolls into view, and Test shows "Testing…" while it waits.
+
 ### Icon buttons on the Gateways page
 
 The actions of a saved gateway (Test, Edit, Delete, and Models where a preset has a model list) are square icon buttons of one size, each with a tooltip and a screen-reader name.
