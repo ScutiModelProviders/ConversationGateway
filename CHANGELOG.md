@@ -4,7 +4,7 @@
 
 ### OmniRoute links to its own dashboard
 
-OmniRoute has no public model list, so its Models link opens the dashboard of your own OmniRoute (port 20128) in a new tab, on the host the saved address names, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`. The List models button shows the names in the page.
+OmniRoute has no public model list, so its Models link opens the dashboard of your own OmniRoute (port 29651) in a new tab, on the host the saved address names, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`. The List models button shows the names in the page.
 
 ### List models
 
