@@ -40,7 +40,8 @@ PRESETS.update({
     "provider": "anthropic",
     "auth": "key",
     "label": "OmniRoute",
-    "model": "combo/standard"
+    "model": "combo/standard",
+    "dashboard_port": 20128
   },
   "openrouter": {
     "provider": "anthropic",

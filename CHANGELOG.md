@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### OmniRoute links to its own dashboard
+
+OmniRoute has no public model list, so its Models link opens the dashboard of your own OmniRoute (port 20128) in a new tab, on the host the saved address names, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`. The List models button shows the names in the page.
+
 ### List models
 
 A gateway that has a model list (Anthropic and OpenAI-compatible with a key, such as OmniRoute, OpenRouter, Ollama, vLLM, Claude and GPT) gets a List models button. The service asks the provider with the saved key (`GET /admin/gateways/{id}/models`) and the page shows the names in a filterable list; click one to copy it. Scuti services, Bedrock, Vertex and Azure have no list and no button.

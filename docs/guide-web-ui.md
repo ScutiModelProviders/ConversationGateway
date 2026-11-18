@@ -18,6 +18,8 @@ Open pages using the tabs below the service name. Overview shows live readiness 
 
 ## Gateways
 
+The Models link of an `omniroute` gateway opens OmniRoute's own dashboard (port 20128) in a new tab, because it has no public model list: on the host of the saved address, or on the host you opened this page from when the address is `host.docker.internal` or `localhost`.
+
 The list icon on a gateway row asks the provider for its model names with the saved key and shows them in a filterable list; click a name to copy it. Gateways without a model list (Scuti, Bedrock, Vertex, Azure) have no such button.
 
 Under the Model field, a link opens the provider's page of model names in a new tab. Each saved gateway named like a preset also has a Models button for the same page.
