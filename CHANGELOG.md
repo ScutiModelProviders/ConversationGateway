@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Presets grouped by provider
+
+The Start from list on the Gateways page groups the presets under Anthropic, OpenAI and compatible, and Scuti model services.
+
 ### Neutral dark theme
 
 The admin page's dark theme uses the neutral dark palette with the orange accent again, in place of the blue-navy one from the tabbed redesign. The light theme is unchanged.
