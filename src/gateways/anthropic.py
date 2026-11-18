@@ -194,9 +194,15 @@ class AnthropicGateway(BaseGateway):
             yield "done", build_result({"content": content, "stop_reason": meta["stop_reason"], "usage": usage, "model": meta["model"]}, schema_name)
 
     async def probe(self) -> str:
+        if self.entry.get("auth", "key") == "key":
+            try:
+                async with self.guard():
+                    await self.client.models.list(limit=1)
+                return "The provider accepted the credentials."
+            except GatewayError as error:
+                if error.code != "gateway_refused":
+                    raise
+        # Bedrock and Vertex have no model list, and some Anthropic-compatible gateways have none either: ask for one token
         async with self.guard():
-            if self.entry.get("auth", "key") == "key":
-                await self.client.models.list(limit=1)
-            else:  # Bedrock and Vertex have no model list: ask for one token
-                await self.client.messages.create(model=self.model, max_tokens=1, messages=[{"role": "user", "content": "ping"}])
+            await self.client.messages.create(model=self.model, max_tokens=1, messages=[{"role": "user", "content": "ping"}])
         return "The provider accepted the credentials."

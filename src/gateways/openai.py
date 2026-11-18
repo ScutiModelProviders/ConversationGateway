@@ -250,11 +250,16 @@ class OpenAIGateway(BaseGateway):
         yield "done", responses_result(final)
 
     async def probe(self) -> str:
-        async with self.guard():
-            if self.entry.get("auth") != "azure":
-                await self.client.models.list()
-            else:  # Azure lists deployments differently: ask for a few tokens
-                await self.complete_ping()
+        if self.entry.get("auth") != "azure":
+            try:
+                async with self.guard():
+                    await self.client.models.list()
+                return "The provider accepted the credentials."
+            except GatewayError as error:
+                if error.code != "gateway_refused":
+                    raise
+        # Azure lists deployments differently, and some providers have no model list (Perplexity): ask for a few tokens
+        await self.complete_ping()
         return "The provider accepted the credentials."
 
     async def complete_ping(self) -> None:
