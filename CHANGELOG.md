@@ -20,7 +20,7 @@ The Gateways editor now uses the admin page's colors, type, tables, buttons and 
 
 ### Gateways in the sidebar
 
-The sidebar item that was called Model connections is now Gateways and shows the gateway list and editor, including the light, standard and heavy models, inside the admin page. `/admin/gateways.html` still works on its own. The admin page and `tools/check_sync.py` now stay in step with DecisionGateway only, not with the tool services.
+The sidebar item that was called Model connections is now Gateways and shows the gateway list and editor, including the light, standard, heavy and extreme models, inside the admin page. `/admin/gateways.html` still works on its own. The admin page and `tools/check_sync.py` now stay in step with DecisionGateway only, not with the tool services.
 
 ### Service workspace
 
@@ -28,7 +28,7 @@ Admin now opens to a full-width Overview with live readiness, request activity b
 
 ### The gateway owns the model names per tier
 
-A saved gateway can keep a model name for each tier (light, standard, heavy) on the Gateways page. A caller sends `"tier": "light"` instead of a model id and gets that model; a tier with no name uses the gateway's own model. `model` still overrides, and a request cannot send both. Legion uses this so it no longer keeps model names for Azure and vLLM.
+A saved gateway can keep a model name for each tier (light, standard, heavy, extreme) on the Gateways page. A caller sends `"tier": "light"` instead of a model id and gets that model; a tier with no name uses the gateway's own model. `model` still overrides, and a request cannot send both. Legion uses this so it no longer keeps model names for Azure and vLLM.
 
 ### Copy works on plain http and inside a frame
 
