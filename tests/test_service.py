@@ -158,3 +158,27 @@ async def test_a_test_that_gets_no_answer_gives_up_with_a_message(store, monkeyp
     with pytest.raises(GatewayError) as error:
         await service(store, silent).test("lfm3")
     assert error.value.code == "gateway_timeout" and "No answer within" in error.value.message
+
+
+async def test_a_paid_provider_shows_the_result_of_its_last_test_as_reachable(tmp_path):
+    ok = {"value": True}
+
+    def handler(request):
+        return httpx.Response(200, json={"object": "list", "data": []}) if ok["value"] else httpx.Response(401, json={"error": {"message": "bad key"}})
+
+    s = GatewayStore(tmp_path / "gateways.json")
+    s.put("gpt", {"provider": "openai", "api_key": "sk-1", "model": "m"})
+    svc = service(s, handler)
+
+    async def reachable():
+        return {row["id"]: row.get("reachable") for row in await svc.gateways()}["gpt"]
+
+    assert await reachable() is None  # a listing never spends a request on a paid provider
+    await svc.test("gpt")
+    assert await reachable() is True
+    ok["value"] = False
+    with pytest.raises(GatewayError):
+        await svc.test("gpt")
+    assert await reachable() is False
+    s.put("gpt", {"provider": "openai", "api_key": "sk-1", "model": "other"})
+    assert await reachable() is None  # an edited gateway has not been tested yet

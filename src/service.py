@@ -205,7 +205,8 @@ class ChatService:
             built.append(gateway)
             current.append(self._store._public(gateway.id, gateway.entry))
         # Only Scuti services are probed on a listing: a probe of a paid provider costs a request.
-        reachable = await asyncio.gather(*(self._is_reachable(g) if g.provider == "scuti" else asyncio.sleep(0, None) for g in built))
+        # The others show the result of their last Test (nothing until one ran).
+        reachable = await asyncio.gather(*(self._is_reachable(g) if g.provider == "scuti" else asyncio.sleep(0, (self._reachable.get(g.id) or (0, None))[1]) for g in built))
         out = []
         for row, g, ok in zip(current, built, reachable):
             item = {**row, **g.capabilities}
@@ -219,9 +220,14 @@ class ChatService:
             gateway = await self._gateway(gateway_id)
         except GatewayError:
             raise GatewayError(404, "unknown_gateway", f"There is no gateway named '{gateway_id}'.") from None
-        self._reachable.pop(gateway_id, None)
         async with self._lease(gateway):
             try:
-                return await asyncio.wait_for(gateway.probe(), TEST_SECONDS)
+                message = await asyncio.wait_for(gateway.probe(), TEST_SECONDS)
             except asyncio.TimeoutError:
+                self._reachable[gateway_id] = (time.monotonic(), False)
                 raise GatewayError(504, "gateway_timeout", f"No answer within {TEST_SECONDS:.0f} seconds. Check the address and that the service is running.", kind="unavailable") from None
+            except GatewayError:
+                self._reachable[gateway_id] = (time.monotonic(), False)
+                raise
+        self._reachable[gateway_id] = (time.monotonic(), True)
+        return message
